@@ -1,11 +1,11 @@
-import { Cart, Category, Order, Product, Table, User, UserLogged } from './declarations';
+import { Cart, Category, Order, Product, Table, User, userLogged } from './declarations';
 import { v4 as uuidv4 } from 'uuid';
 
 export class AmazonApp {
   name: string = 'Amazon App';
   // USERS
   #users: Table<User> = {};
-  #userLogged: UserLogged = null;
+  #userLogged: userLogged = null;
   // ORDERS
   #orders: Table<Order> = {};
   #userOrders: Table<Array<Order['id']>> = {};
@@ -26,12 +26,53 @@ export class AmazonApp {
   // #endregion
 
   // #region METHODS
-  login() {}
-  logout() {}
-  signup() {}
-  deleteUser() {}
-  getUserLogged() {}
-  upgradeUserToSeller() {}
+  logIn({ email, password }: { email: string; password: string }) {
+    const user: User | undefined = Object.values(this.#users).find(user => {
+      if (user.email === email && user.password === password) return user;
+    });
+    if (!!user) {
+      user.password = '';
+      this.#userLogged = user;
+    } else throw new Error('User not found');
+  }
+  logOut() {
+    if (!!this.#userLogged) this.#userLogged = null;
+    else throw new Error('User not logged');
+  }
+  signUp({ email, password }: { email: string; password: string }) {
+    const userExist = Object.values(this.#users).find(user => user.email === email);
+    if (userExist) throw new Error('User already exist');
+
+    let id = uuidv4();
+    this.#users[id] = {
+      email,
+      password,
+      id,
+      isActive: true,
+      name: '',
+      lastname: '',
+      phone: '',
+      address: { street: '', city: '', state: '', zip: '' },
+      isVendor: false,
+    };
+  }
+  deleteUser() {
+    if (!!this.#userLogged) {
+      this.#users[this.#userLogged.id].isActive = false;
+      this.#userLogged = null;
+    } else throw new Error('User not logged');
+  }
+  getuserLogged() {
+    if (!!this.#userLogged) return this.#userLogged;
+    else throw new Error('User not logged');
+  }
+  upgradeUserToSeller() {
+    if (!!this.#userLogged) {
+      this.#userLogged.isVendor = true;
+      this.#users[this.#userLogged.id].isVendor = true;
+    } else throw new Error('User not logged');
+  }
+  //P
 
   addProductToStore() {}
   removeProductFromStore() {}
